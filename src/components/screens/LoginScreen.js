@@ -1,15 +1,108 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 
 /**
  * Componente LoginScreen
  * Renderiza a interface de usuário para a tela de login.
- * Esta versão é uma réplica fiel do protótipo e do documento de handoff de design,
- * implementando o layout de tela dividida e todos os elementos visuais especificados.
+ * Esta versão inclui lógica de estado robusta, validação client-side
+ * e tratamento detalhado de erros da API.
  */
 const LoginScreen = () => {
+    const router = useRouter();
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    /**
+     * Valida o formato de um e-mail.
+     * @param {string} email - O e-mail a ser validado.
+     * @returns {boolean} - True se o e-mail for válido, false caso contrário.
+     */
+    const validateEmail = (email) => {
+        // Expressão regular simples para validação de e-mail
+        return /\S+@\S+\.\S+/.test(email);
+    };
+
+    /**
+     * Manipulador para a submissão do formulário de login.
+     */
+    const handleLogin = async (event) => {
+        event.preventDefault();
+        setError(null); // Limpa erros anteriores
+
+        // 1. Validação Client-Side (Defensive Programming)
+        if (!email || !password) {
+            setError('Por favor, preencha o e-mail e a senha.');
+            return;
+        }
+        if (!validateEmail(email)) {
+            setError('Por favor, insira um e-mail válido.');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            let data;
+            try {
+                // Tenta parsear o JSON. Isso pode falhar se for um erro 500 com HTML.
+                data = await response.json();
+            } catch (jsonError) {
+                // Se o parse falhar, é um erro de servidor inesperado.
+                throw new Error(`O servidor retornou uma resposta inesperada (Status: ${response.status}).`);
+            }
+
+            // 2. Tratamento de Respostas de Erro da API (Status HTTP)
+            if (!response.ok) {
+                let errorMessage = data.message; // Mensagem vinda do backend
+
+                if (response.status === 401 || response.status === 404) {
+                    errorMessage = 'E-mail ou senha incorretos.';
+                } else if (response.status === 400) {
+                    errorMessage = errorMessage || 'Dados inválidos. Verifique os campos.';
+                } else if (response.status >= 500) {
+                    errorMessage = 'Ocorreu um erro interno no servidor. Tente mais tarde.';
+                }
+
+                throw new Error(errorMessage || 'Não foi possível fazer login.');
+            }
+
+            // 3. Tratamento de Resposta de Sucesso (200 OK)
+            if (!data.token) {
+                // Validação de contrato: A API deu OK, mas não enviou o token.
+                console.error('Resposta de login bem-sucedida, mas sem token.');
+                throw new Error('Resposta inválida do servidor. Tente novamente.');
+            }
+
+            console.log('Login bem-sucedido:', data);
+            router.push('/dashboard');
+
+        } catch (err) {
+            // 4. Captura de Erros (Erros de Rede ou os que lançamos acima)
+            if (err.message.includes('Failed to fetch')) {
+                setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
+            } else {
+                // Define o erro com a mensagem tratada (ex: 'E-mail ou senha incorretos.')
+                setError(err.message);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <>
-            {/* Estilos para a animação do gradiente, replicados do protótipo */}
+            {/* Estilos para a animação do gradiente */}
             <style>
                 {`
           .art-panel {
@@ -28,7 +121,7 @@ const LoginScreen = () => {
             <div id="login-screen" className="min-h-screen bg-slate-50">
                 <div className="lg:grid lg:grid-cols-2 min-h-screen">
 
-                    {/* Painel Artístico (visível apenas em telas grandes) */}
+                    {/* Painel Artístico */}
                     <div className="art-panel hidden lg:flex flex-col items-center justify-center text-white p-12 text-center">
                         <svg className="h-16 w-16 mb-6" viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
@@ -59,19 +152,25 @@ const LoginScreen = () => {
                             </div>
 
                             {/* Card do Formulário */}
-                            <div className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-xl">
+                            <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-xl" onSubmit={handleLogin}>
                                 {/* Inputs de E-mail e Senha */}
                                 <div className="rounded-md shadow-sm -space-y-px">
                                     <div>
                                         <input id="email-address" name="email" type="email" autoComplete="email" required
                                                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent sm:text-sm font-lato"
                                                placeholder="E-mail"
+                                               value={email}
+                                               onChange={(e) => setEmail(e.target.value)}
+                                               disabled={isLoading}
                                         />
                                     </div>
                                     <div>
                                         <input id="password" name="password" type="password" autoComplete="current-password" required
                                                className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent sm:text-sm font-lato"
                                                placeholder="Senha"
+                                               value={password}
+                                               onChange={(e) => setPassword(e.target.value)}
+                                               disabled={isLoading}
                                         />
                                     </div>
                                 </div>
@@ -86,16 +185,29 @@ const LoginScreen = () => {
 
                                 {/* Botão de Entrar */}
                                 <div>
-                                    <button type="button" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-montserrat transition-colors duration-300">
-                                        Entrar
+                                    <button type="submit"
+                                            disabled={isLoading}
+                                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-montserrat transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? 'Entrando...' : 'Entrar'}
                                     </button>
                                 </div>
+
+                                {/* Exibição de Mensagem de Erro */}
+                                {error && (
+                                    <div className="text-center">
+                                        <p className="text-sm text-red-600 font-lato">
+                                            {error}
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Divisor "ou" */}
                                 <div className="relative flex py-2 items-center">
                                     <div className="flex-grow border-t border-gray-200"></div>
                                     <span className="flex-shrink mx-4 text-gray-400 text-xs font-lato">ou</span>
                                     <div className="flex-grow border-t border-gray-200"></div>
+
                                 </div>
 
                                 {/* Botão de Entrar com Google */}
@@ -105,7 +217,7 @@ const LoginScreen = () => {
                                         Entrar com Google
                                     </button>
                                 </div>
-                            </div>
+                            </form>
 
                             {/* Link para Criar Conta */}
                             <p className="text-center text-sm text-gray-600 font-lato">
