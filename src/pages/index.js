@@ -1,10 +1,9 @@
-import LoginScreen from '@/components/screens/LoginScreen';
+import HomeScreen from '@/components/screens/HomeScreen';
 
 /**
- * Página principal da aplicação.
- * Em um projeto Next.js, os arquivos dentro de `src/pages`
- * se tornam rotas automaticamente. `index.js` é a rota raiz ("/").
+ * Rota para a página inicial.
+ * Renderiza o componente HomeScreen.
  */
 export default function HomePage() {
-    return <LoginScreen />;
+    return <HomeScreen />;
 }
