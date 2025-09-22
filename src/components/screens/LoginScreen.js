@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
+import {authService} from "@/services/authService";
 
 /**
  * Componente LoginScreen
@@ -45,47 +46,12 @@ const LoginScreen = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/v1/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
-            });
+            const data = await authService.login({ email, password });
 
-            let data;
-            try {
-                // Tenta parsear o JSON. Isso pode falhar se for um erro 500 com HTML.
-                data = await response.json();
-            } catch (jsonError) {
-                // Se o parse falhar, é um erro de servidor inesperado.
-                throw new Error(`O servidor retornou uma resposta inesperada (Status: ${response.status}).`);
+            if (data.token) {
+                authService.startSession(data.token);
+                router.push('/dashboard');
             }
-
-            // 2. Tratamento de Respostas de Erro da API (Status HTTP)
-            if (!response.ok) {
-                let errorMessage = data.message; // Mensagem vinda do backend
-
-                if (response.status === 401 || response.status === 404) {
-                    errorMessage = 'E-mail ou senha incorretos.';
-                } else if (response.status === 400) {
-                    errorMessage = errorMessage || 'Dados inválidos. Verifique os campos.';
-                } else if (response.status >= 500) {
-                    errorMessage = 'Ocorreu um erro interno no servidor. Tente mais tarde.';
-                }
-
-                throw new Error(errorMessage || 'Não foi possível fazer login.');
-            }
-
-            // 3. Tratamento de Resposta de Sucesso (200 OK)
-            if (!data.token) {
-                // Validação de contrato: A API deu OK, mas não enviou o token.
-                console.error('Resposta de login bem-sucedida, mas sem token.');
-                throw new Error('Resposta inválida do servidor. Tente novamente.');
-            }
-
-            console.log('Login bem-sucedido:', data);
-            router.push('/dashboard');
 
         } catch (err) {
             // 4. Captura de Erros (Erros de Rede ou os que lançamos acima)

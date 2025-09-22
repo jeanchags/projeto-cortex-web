@@ -1,11 +1,12 @@
 import LoginScreen from '@/components/screens/LoginScreen';
+import {authService} from "@/services/authService";
 
 /**
  * Página principal da aplicação.
  * Em um projeto Next.js, os arquivos dentro de `src/pages`
  * se tornam rotas automaticamente. `index.js` é a rota raiz ("/").
  */
-export default function HomePage() {
+export default function LoginPage() {
     return <LoginScreen />;
 }
 
