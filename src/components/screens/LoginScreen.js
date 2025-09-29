@@ -19,6 +19,17 @@ const EmailIcon = () => (
     </svg>
 );
 
+// Ícone do Google como um componente React para melhor controle
+const GoogleIcon = () => (
+    <svg className="h-5 w-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M48 24C48 22.0427 47.8438 20.125 47.5469 18.25H24.4688V28.8281H37.8281C37.2656 31.8906 35.5312 34.5 32.9531 36.1719V42.5312H41.0156C45.3281 38.4844 48 31.8906 48 24Z" fill="#4285F4"/>
+        <path d="M24.4688 48C30.9375 48 36.375 45.8906 40.0312 42.5312L32.9531 36.1719C30.9375 37.5 28.0781 38.4375 24.4688 38.4375C18.2344 38.4375 12.8906 34.3438 11.0156 28.5H2.625V35.0625C6.32812 42.7969 14.7188 48 24.4688 48Z" fill="#34A853"/>
+        <path d="M11.0156 28.5C10.5 27.0469 10.2188 25.5 10.2188 24C10.2188 22.5 10.5 20.9531 11.0156 19.5L11.0156 12.9375H2.625C0.9375 16.2188 0 19.9688 0 24C0 28.0312 0.9375 31.7812 2.625 35.0625L11.0156 28.5Z" fill="#FBBC05"/>
+        <path d="M24.4688 9.5625C27.5312 9.5625 30.1562 10.625 32.25 12.625L40.2188 4.65625C36.375 1.73438 30.9375 0 24.4688 0C14.7188 0 6.32812 5.20312 2.625 12.9375L11.0156 19.5C12.8906 13.6562 18.2344 9.5625 24.4688 9.5625Z" fill="#EA4335"/>
+    </svg>
+);
+
+
 const LoginScreen = () => {
     const router = useRouter();
     const [isSignUpMode, setIsSignUpMode] = useState(false);
@@ -130,8 +141,8 @@ const LoginScreen = () => {
                                 <span class="divider-line"></span>
                             </div>
 
-                            <button class="btn google-btn">
-                                <i class="fab fa-google"></i>
+                            <button type="button" className="btn google-btn">
+                                <GoogleIcon />
                                 <span>Entrar com Google</span>
                             </button>
                         </form>
@@ -271,26 +282,29 @@ const LoginScreen = () => {
                     text-transform: uppercase;
                 }
 
+                /* Estilo Aprimorado para o Botão Google */
                 .google-btn {
+                    max-width: 380px; /* Garante que o botão não ultrapasse os outros inputs */
+                    width: 100%;
                     background-color: #ffffff;
                     color: #334155; /* slate-700 */
                     border: 1px solid #cbd5e1; /* slate-300 */
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    gap: 15px; /* Espaço entre ícone e texto */
-                    text-transform: none; /* Remover uppercase do estilo .btn */
+                    gap: 12px; /* Espaçamento ajustado */
+                    text-transform: none; /* Manter o texto em caixa normal */
                     font-family: 'Lato', sans-serif;
                     font-weight: 700;
-                }
-
-                .google-btn i {
-                    font-size: 1.2rem;
+                    height: 49px;
+                    border-radius: 49px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
                 }
 
                 .google-btn:hover {
-                    background-color: #f8fafc; /* slate-50 */
                     border-color: #94a3b8; /* slate-400 */
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }
 
                 .login-container {
@@ -399,7 +413,8 @@ const LoginScreen = () => {
                 }
 
                 .btn {
-                    width: 150px;
+                    width: 100%;
+                    max-width: 380px;
                     background-color: #004AAD;
                     border: none;
                     outline: none;
