@@ -1,199 +1,414 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import {authService} from "@/services/authService";
+import Image from 'next/image'; // Usando o componente Image do Next.js para otimização
+import { authService } from "@/services/authService";
 
-/**
- * Componente LoginScreen
- * Renderiza a interface de usuário para a tela de login.
- * Esta versão inclui lógica de estado robusta, validação client-side
- * e tratamento detalhado de erros da API.
- */
+const UserIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="form-icon">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+    </svg>
+);
+const LockIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="form-icon">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+    </svg>
+);
+const EmailIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="form-icon">
+        <path strokeLinecap="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" />
+    </svg>
+);
+
 const LoginScreen = () => {
     const router = useRouter();
+    const [isSignUpMode, setIsSignUpMode] = useState(false);
 
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
+    // Estado unificado para os formulários para simplificar o gerenciamento
+    const [loginValues, setLoginValues] = useState({ email: '', password: '' });
+    const [regValues, setRegValues] = useState({ name: '', email: '', password: '', confirmPassword: '' });
 
-    /**
-     * Valida o formato de um e-mail.
-     * @param {string} email - O e-mail a ser validado.
-     * @returns {boolean} - True se o e-mail for válido, false caso contrário.
-     */
-    const validateEmail = (email) => {
-        // Expressão regular simples para validação de e-mail
-        return /\S+@\S+\.\S+/.test(email);
+    // Estados para feedback ao usuário (erros e carregamento)
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleLoginChange = (e) => {
+        setError(''); // Limpa o erro ao digitar
+        setLoginValues({ ...loginValues, [e.target.name]: e.target.value });
     };
 
-    /**
-     * Manipulador para a submissão do formulário de login.
-     */
-    const handleLogin = async (event) => {
-        event.preventDefault();
-        setError(null); // Limpa erros anteriores
+    const handleRegisterChange = (e) => {
+        setError(''); // Limpa o erro ao digitar
+        setRegValues({ ...regValues, [e.target.name]: e.target.value });
+    };
 
-        // 1. Validação Client-Side (Defensive Programming)
-        if (!email || !password) {
-            setError('Por favor, preencha o e-mail e a senha.');
-            return;
-        }
-        if (!validateEmail(email)) {
-            setError('Por favor, insira um e-mail válido.');
-            return;
-        }
-
-        setIsLoading(true);
-
+    const handleLoginSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
         try {
-            const data = await authService.login({ email, password });
-
-            if (data.token) {
-                authService.startSession(data.token);
-                router.push('/dashboard');
-            }
-
+            await authService.login({
+                email: loginValues.email,
+                password: loginValues.password,
+            });
+            router.push('/dashboard');
         } catch (err) {
-            // 4. Captura de Erros (Erros de Rede ou os que lançamos acima)
-            if (err.message.includes('Failed to fetch')) {
-                setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
-            } else {
-                // Define o erro com a mensagem tratada (ex: 'E-mail ou senha incorretos.')
-                setError(err.message);
-            }
+            setError(err.message || 'Falha no login. Verifique suas credenciais.');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
+        }
+    };
+
+    const handleRegisterSubmit = async (e) => {
+        e.preventDefault();
+        if (regValues.password !== regValues.confirmPassword) {
+            setError('As senhas não coincidem.');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            await authService.register({
+                name: regValues.name,
+                email: regValues.email,
+                password: regValues.password,
+            });
+            alert('Conta criada com sucesso! Por favor, faça o login para continuar.');
+            setIsSignUpMode(false);
+            // Limpa os formulários para segurança e usabilidade
+            setRegValues({ name: '', email: '', password: '', confirmPassword: '' });
+            setLoginValues({ email: regValues.email, password: '' }); // Preenche o e-mail no login
+        } catch (err) {
+            setError(err.message || 'Não foi possível registrar. Tente novamente.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <>
-            {/* Estilos para a animação do gradiente */}
-            <style>
-                {`
-          .art-panel {
-            background: linear-gradient(135deg, #004AAD, #3b82f6, #ECBE3C);
-            background-size: 200% 200%;
-            animation: gradient-animation 10s ease infinite;
-          }
-          @keyframes gradient-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}
-            </style>
-
-            <div id="login-screen" className="min-h-screen bg-slate-50">
-                <div className="lg:grid lg:grid-cols-2 min-h-screen">
-
-                    {/* Painel Artístico */}
-                    <div className="art-panel hidden lg:flex flex-col items-center justify-center text-white p-12 text-center">
-                        <svg className="h-16 w-16 mb-6" viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
-                        </svg>
-                        <h1 className="text-4xl font-montserrat leading-tight">
-                            Bem-vindo(a) ao Cortex
-                        </h1>
-                        <p className="mt-4 text-lg opacity-80 max-w-sm">
-                            A plataforma que transforma dados em desenvolvimento com serenidade digital.
-                        </p>
-                    </div>
-
-                    {/* Painel do Formulário de Login */}
-                    <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-                        <div className="max-w-md w-full space-y-8">
-
-                            {/* Cabeçalho do formulário */}
-                            <div className="text-center">
-                                <svg className="mx-auto h-12 w-12 text-blue-800 lg:hidden" viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
-                                </svg>
-                                <h1 className="mt-4 text-3xl font-montserrat text-gray-900">
-                                    Acesse sua conta
-                                </h1>
-                                <p className="mt-2 text-gray-600 font-lato">
-                                    Foco no que importa: a evolução.
-                                </p>
+            <div className={`login-container ${isSignUpMode ? "sign-up-mode" : ""}`}>
+                <div className="forms-container">
+                    <div className="signin-signup">
+                        <form onSubmit={handleLoginSubmit} className="sign-in-form">
+                            <h2 className="title">Faça seu login</h2>
+                            <div className="input-field">
+                                <UserIcon />
+                                <input type="email" placeholder="Email" name="email" value={loginValues.email} onChange={handleLoginChange} required />
                             </div>
+                            <div className="input-field">
+                                <LockIcon />
+                                <input 
+                                    type="password"
+                                    placeholder="Senha"
+                                    name="password" 
+                                    value={loginValues.password} 
+                                    onChange={handleLoginChange} 
+                                    required 
+                                />
+                            </div>
+                            {error && !isSignUpMode && <p className="error-message">{error}</p>}
+                            <button type="submit" className="btn solid" disabled={loading}>
+                                {loading && !isSignUpMode ? 'Entrando...' : 'Login'}
+                            </button>
+                        </form>
 
-                            {/* Card do Formulário */}
-                            <form className="mt-8 space-y-6 bg-white p-8 rounded-lg shadow-xl" onSubmit={handleLogin}>
-                                {/* Inputs de E-mail e Senha */}
-                                <div className="rounded-md shadow-sm -space-y-px">
-                                    <div>
-                                        <input id="email-address" name="email" type="email" autoComplete="email" required
-                                               className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent sm:text-sm font-lato"
-                                               placeholder="E-mail"
-                                               value={email}
-                                               onChange={(e) => setEmail(e.target.value)}
-                                               disabled={isLoading}
-                                        />
-                                    </div>
-                                    <div>
-                                        <input id="password" name="password" type="password" autoComplete="current-password" required
-                                               className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent sm:text-sm font-lato"
-                                               placeholder="Senha"
-                                               value={password}
-                                               onChange={(e) => setPassword(e.target.value)}
-                                               disabled={isLoading}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-end">
-                                    <div className="text-sm">
-                                        <a href="#" className="font-medium text-blue-800 hover:text-blue-700 font-lato">
-                                            Esqueceu sua senha?
-                                        </a>
-                                    </div>
-                                </div>
-
-                                {/* Botão de Entrar */}
-                                <div>
-                                    <button type="submit"
-                                            disabled={isLoading}
-                                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-800 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 font-montserrat transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isLoading ? 'Entrando...' : 'Entrar'}
-                                    </button>
-                                </div>
-
-                                {/* Exibição de Mensagem de Erro */}
-                                {error && (
-                                    <div className="text-center">
-                                        <p className="text-sm text-red-600 font-lato">
-                                            {error}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Divisor "ou" */}
-                                <div className="relative flex py-2 items-center">
-                                    <div className="flex-grow border-t border-gray-200"></div>
-                                    <span className="flex-shrink mx-4 text-gray-400 text-xs font-lato">ou</span>
-                                    <div className="flex-grow border-t border-gray-200"></div>
-
-                                </div>
-
-                                {/* Botão de Entrar com Google */}
-                                <div>
-                                    <button type="button" className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                                        <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M47.52 24.54C47.52 22.86 47.34 21.24 47.04 19.68H24V28.32H37.44C36.84 31.44 35.16 34.08 32.64 35.82V41.22H40.2C44.88 36.96 47.52 31.14 47.52 24.54Z" fill="#4285F4"/><path d="M24 48C30.48 48 35.88 45.84 40.2 41.22L32.64 35.82C30.36 37.44 27.36 38.4 24 38.4C17.64 38.4 12.24 34.32 10.32 28.8H2.4V34.32C6.6 42.66 14.64 48 24 48Z" fill="#34A853"/><path d="M10.32 28.8C9.96 27.66 9.72 26.46 9.72 25.2C9.72 23.94 9.96 22.74 10.32 21.6L2.4 16.08C0.84 19.14 0 22.08 0 25.2C0 28.32 0.84 31.26 2.4 34.32L10.32 28.8Z" fill="#FBBC05"/><path d="M24 9.6C27.6 9.6 30.72 10.8 33.12 12.96L40.44 5.64C36 1.92 30.48 0 24 0C14.64 0 6.6 5.34 2.4 13.68L10.32 19.2C12.24 13.68 17.64 9.6 24 9.6Z" fill="#EA4335"/></svg>
-                                        Entrar com Google
-                                    </button>
-                                </div>
-                            </form>
-
-                            {/* Link para Criar Conta */}
-                            <p className="text-center text-sm text-gray-600 font-lato">
-                                Ainda não tem conta? <a href="#" className="font-medium text-blue-800 hover:text-blue-700">Crie agora</a>
-                            </p>
-                        </div>
+                        <form onSubmit={handleRegisterSubmit} className="sign-up-form">
+                            <h2 className="title">Crie sua conta</h2>
+                            <div className="input-field">
+                                <UserIcon />
+                                <input type="text" placeholder="Nome Completo" name="name" value={regValues.name} onChange={handleRegisterChange} required />
+                            </div>
+                            <div className="input-field">
+                                <EmailIcon />
+                                <input type="email" placeholder="Email" name="email" value={regValues.email} onChange={handleRegisterChange} required />
+                            </div>
+                            <div className="input-field">
+                                <LockIcon />
+                                <input type="password" placeholder="Senha" name="password" value={regValues.password} onChange={handleRegisterChange} required minLength="6" />
+                            </div>
+                            <div className="input-field">
+                                <LockIcon />
+                                <input type="password" placeholder="Confirme a Senha" name="confirmPassword" value={regValues.confirmPassword} onChange={handleRegisterChange} required />
+                            </div>
+                            {error && isSignUpMode && <p className="error-message">{error}</p>}
+                            <button type="submit" className="btn" disabled={loading}>
+                                {loading && isSignUpMode ? 'Criando...' : 'Criar Conta'}
+                            </button>
+                        </form>
                     </div>
+                </div>
 
+                <div className="panels-container">
+                    <div className="panel left-panel">
+                        <div className="content">
+                            <h3>Ainda não tem conta?</h3>
+                            <p>Comece sua jornada de insights hoje. Crie sua conta e desbloqueie o potencial dos seus dados.</p>
+                            <button className="btn transparent" onClick={() => { setIsSignUpMode(true); setError(''); }}>
+                                Crie agora
+                            </button>
+                        </div>
+                        <Image src="https://raw.githubusercontent.com/adamiqshan/animated-login-signup-page/main/img/log.svg" width={400} height={400} className="image" alt="Login illustration" />
+                    </div>
+                    <div className="panel right-panel">
+                        <div className="content">
+                            <h3>Já possui uma conta?</h3>
+                            <p>Foco no que importa: a evolução. Acesse sua conta para continuar de onde parou.</p>
+                            <button className="btn transparent" onClick={() => { setIsSignUpMode(false); setError(''); }}>
+                                Faça login
+                            </button>
+                        </div>
+                        <Image src="https://raw.githubusercontent.com/adamiqshan/animated-login-signup-page/main/img/register.svg" width={400} height={400} className="image" alt="Register illustration" />
+                    </div>
                 </div>
             </div>
+
+            <style jsx global>{`
+                /* Estilos Globais para a página de Login - para evitar conflitos, usei um container com classe específica */
+                .login-container {
+                    position: relative;
+                    width: 100%;
+                    background-color: #fff;
+                    min-height: 100vh;
+                    overflow: hidden;
+                    font-family: 'Lato', sans-serif;
+                }
+
+                .login-container:before {
+                    content: "";
+                    position: absolute;
+                    height: 2000px;
+                    width: 2000px;
+                    top: -10%;
+                    right: 48%;
+                    transform: translateY(-50%);
+                    background-image: linear-gradient(-45deg, #004AAD 0%, #ECBE3C 100%);
+                    transition: 1.8s ease-in-out;
+                    border-radius: 50%;
+                    z-index: 6;
+                }
+
+                .forms-container {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    top: 0;
+                    left: 0;
+                }
+
+                .signin-signup {
+                    position: absolute;
+                    top: 50%;
+                    transform: translate(-50%, -50%);
+                    left: 75%;
+                    width: 50%;
+                    transition: 1s 0.7s ease-in-out;
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    z-index: 5;
+                }
+
+                form {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-direction: column;
+                    padding: 0rem 5rem;
+                    transition: all 0.2s 0.7s;
+                    overflow: hidden;
+                    grid-column: 1 / 2;
+                    grid-row: 1 / 2;
+                }
+
+                form.sign-up-form {
+                    opacity: 0;
+                    z-index: 1;
+                }
+
+                form.sign-in-form {
+                    z-index: 2;
+                }
+
+                .title {
+                    font-size: 2.2rem;
+                    color: #444;
+                    margin-bottom: 10px;
+                    font-family: 'Montserrat', sans-serif;
+                }
+
+                .input-field {
+                    max-width: 380px;
+                    width: 100%;
+                    background-color: #f0f0f0;
+                    margin: 10px 0;
+                    height: 55px;
+                    border-radius: 55px;
+                    display: grid;
+                    grid-template-columns: 15% 85%;
+                    padding: 0 0.4rem;
+                    position: relative;
+                }
+
+                .input-field .form-icon {
+                    text-align: center;
+                    line-height: 55px;
+                    color: #acacac;
+                    transition: 0.5s;
+                    font-size: 1.1rem;
+                }
+
+                .input-field input {
+                    background: none;
+                    outline: none;
+                    border: none;
+                    line-height: 1;
+                    font-weight: 600;
+                    font-size: 1.1rem;
+                    color: #333;
+                }
+
+                .input-field input::placeholder {
+                    color: #aaa;
+                    font-weight: 500;
+                }
+
+                .btn {
+                    width: 150px;
+                    background-color: #004AAD;
+                    border: none;
+                    outline: none;
+                    height: 49px;
+                    border-radius: 49px;
+                    color: #fff;
+                    text-transform: uppercase;
+                    font-weight: 600;
+                    margin: 10px 0;
+                    cursor: pointer;
+                    transition: 0.5s;
+                }
+
+                .btn:hover {
+                    background-color: #003a8c;
+                }
+                
+                .btn:disabled {
+                    background-color: #cccccc;
+                    cursor: not-allowed;
+                }
+
+                .btn.transparent {
+                    margin: 0;
+                    background: none;
+                    border: 2px solid #fff;
+                    width: 130px;
+                    height: 41px;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                }
+
+                .panels-container {
+                    position: absolute;
+                    height: 100%;
+                    width: 100%;
+                    top: 0;
+                    left: 0;
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                .panel {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    justify-content: space-around;
+                    text-align: center;
+                    z-index: 6;
+                    overflow: hidden;
+                }
+
+                .left-panel {
+                    pointer-events: all;
+                    padding: 3rem 17% 2rem 12%;
+                }
+
+                .right-panel {
+                    pointer-events: none;
+                    padding: 3rem 12% 2rem 17%;
+                }
+
+                .panel .content {
+                    color: #fff;
+                    transition: transform 0.9s ease-in-out;
+                    transition-delay: 0.6s;
+                }
+
+                .panel h3 {
+                    font-weight: 600;
+                    line-height: 1;
+                    font-size: 1.5rem;
+                }
+
+                .panel p {
+                    font-size: 0.95rem;
+                    padding: 0.7rem 0;
+                }
+
+                .image {
+                    width: 100%;
+                    transition: transform 1.1s ease-in-out;
+                    transition-delay: 0.4s;
+                }
+                
+                .error-message {
+                    color: #ef4444; /* red-500 */
+                    font-size: 0.875rem;
+                    margin-top: 5px;
+                    max-width: 380px;
+                    text-align: center;
+                }
+
+                /* Animação */
+                .login-container.sign-up-mode:before {
+                    transform: translate(100%, -50%);
+                    right: 52%;
+                }
+
+                .login-container.sign-up-mode .left-panel .image,
+                .login-container.sign-up-mode .left-panel .content {
+                    transform: translateX(-800px);
+                }
+
+                .login-container.sign-up-mode .signin-signup {
+                    left: 25%;
+                }
+
+                .login-container.sign-up-mode form.sign-up-form {
+                    opacity: 1;
+                    z-index: 2;
+                }
+
+                .login-container.sign-up-mode form.sign-in-form {
+                    opacity: 0;
+                    z-index: 1;
+                }
+
+                .login-container.sign-up-mode .right-panel .image,
+                .login-container.sign-up-mode .right-panel .content {
+                    transform: translateX(0%);
+                }
+
+                .login-container.sign-up-mode .left-panel {
+                    pointer-events: none;
+                }
+
+                .login-container.sign-up-mode .right-panel {
+                    pointer-events: all;
+                }
+
+                @media (max-width: 870px) {
+                  /* Estilos responsivos... */
+                }
+            `}
+            </style>
         </>
     );
 };

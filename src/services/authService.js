@@ -75,8 +75,58 @@ async function login({ email, password }) {
     return data;
 }
 
+async function register({ name, email, password }) {
+    const response = await fetch(`/${process.env.NEXT_PUBLIC_API_REGISTER_PATH}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify({ name, email, password }),
+    });
+
+    let data;
+    try {
+        // Tenta parsear o JSON. Isso pode falhar se for um erro 500 com HTML.
+        data = await response.json();
+    } catch (jsonError) {
+        // Se o parse falhar, é um erro de servidor inesperado.
+        throw new Error(`O servidor retornou uma resposta inesperada (Status: ${response.status}).`);
+    }
+
+    if (!response.ok) {
+        // Lógica de tratamento de erro similar à função de login
+        throw new Error(data.message || 'Não foi possível registrar. Tente novamente.');
+    }
+
+    // 2. Tratamento de Respostas de Erro da API (Status HTTP)
+    if (!response.ok) {
+        let errorMessage = data.message; // Mensagem vinda do backend
+
+        if (response.status === 401 || response.status === 404) {
+            errorMessage = '401 ou 404)';
+        } else if (response.status === 400) {
+            errorMessage = errorMessage || '400';
+        } else if (response.status >= 500) {
+            errorMessage = '500';
+        }
+
+        throw new Error(errorMessage || 'Não foi possível fazer o registro.');
+    }
+
+    // 3. Tratamento de Resposta de Sucesso (200 OK)
+    if (!data.token) {
+        // Validação de contrato: A API deu OK, mas não enviou o token.
+        console.error('Resposta de Registro bem-sucedido, mas sem token.');
+        throw new Error('Resposta inválida do servidor. Tente novamente.');
+    }
+
+    console.log('Registro bem-sucedido:', data);
+    return data;
+}
+
 export const authService = {
     login,
+    register,
     startSession,
     deleteSession,
     getSessionToken: (ctx = null) => {
