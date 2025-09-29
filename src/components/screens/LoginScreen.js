@@ -59,10 +59,12 @@ const LoginScreen = () => {
         setLoginError(null);
         setIsLoginLoading(true);
         try {
-            await authService.login({
+            const data = await authService.login({
                 email: loginValues.email,
                 password: loginValues.password,
             });
+
+            authService.startSession(data.token);
             router.push('/dashboard');
         } catch (err) {
             setLoginError(err.message);
@@ -287,7 +289,7 @@ const LoginScreen = () => {
                     max-width: 380px; /* Garante que o botão não ultrapasse os outros inputs */
                     width: 100%;
                     background-color: #ffffff;
-                    color: #334155; /* slate-700 */
+                    color: #b6d5ffff; /* slate-700 */
                     border: 1px solid #cbd5e1; /* slate-300 */
                     display: flex;
                     justify-content: center;
