@@ -92,7 +92,12 @@ const LoginScreen = () => {
                     <div className="signin-signup">
                         {/* Formulário de Login */}
                         <form onSubmit={handleLoginSubmit} className="sign-in-form">
-                            <h2 className="title">Faça seu login</h2>
+                            <div class="logo">
+                                <svg viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
+                                </svg>
+                            </div>
+                            <h2 class="title">Acesse sua conta</h2>
                             <div className="input-field">
                                 <EmailIcon />
                                 <input
@@ -119,11 +124,26 @@ const LoginScreen = () => {
                             <button type="submit" className="btn solid" disabled={isLoginLoading}>
                                 {isLoginLoading ? 'Entrando...' : 'Login'}
                             </button>
+                            <div class="divider">
+                                <span class="divider-line"></span>
+                                <span class="divider-text">OU</span>
+                                <span class="divider-line"></span>
+                            </div>
+
+                            <button class="btn google-btn">
+                                <i class="fab fa-google"></i>
+                                <span>Entrar com Google</span>
+                            </button>
                         </form>
 
                         {/* Formulário de Registro */}
                         <form onSubmit={handleRegisterSubmit} className="sign-up-form">
-                            <h2 className="title">Crie sua conta</h2>
+                            <div class="logo">
+                                <svg viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
+                                </svg>
+                            </div>
+                            <h2 class="title">Crie sua conta</h2>
                             <div className="input-field">
                                 <UserIcon />
                                 <input
@@ -214,6 +234,63 @@ const LoginScreen = () => {
                 body,
                 input {
                     font-family: 'Lato', sans-serif;
+                }
+
+                .logo {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 1rem;
+                }
+
+                .logo svg {
+                    height: 48px;
+                    width: 48px;
+                    color: #004AAD; /* blue-800 */
+                }
+
+                .divider {
+                    display: flex;
+                    align-items: center;
+                    text-align: center;
+                    width: 100%;
+                    max-width: 380px;
+                    margin: 20px 0 15px;
+                }
+
+                .divider-line {
+                    flex-grow: 1;
+                    border-bottom: 1px solid #cbd5e1; /* slate-300 */
+                }
+
+                .divider-text {
+                    padding: 0 10px;
+                    color: #64748b; /* slate-500 */
+                    font-size: 0.8rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                }
+
+                .google-btn {
+                    background-color: #ffffff;
+                    color: #334155; /* slate-700 */
+                    border: 1px solid #cbd5e1; /* slate-300 */
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 15px; /* Espaço entre ícone e texto */
+                    text-transform: none; /* Remover uppercase do estilo .btn */
+                    font-family: 'Lato', sans-serif;
+                    font-weight: 700;
+                }
+
+                .google-btn i {
+                    font-size: 1.2rem;
+                }
+
+                .google-btn:hover {
+                    background-color: #f8fafc; /* slate-50 */
+                    border-color: #94a3b8; /* slate-400 */
                 }
 
                 .login-container {
