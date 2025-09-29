@@ -105,12 +105,12 @@ const LoginScreen = () => {
                     <div className="signin-signup">
                         {/* Formulário de Login */}
                         <form onSubmit={handleLoginSubmit} className="sign-in-form">
-                            <div class="logo">
+                            <div className="logo">
                                 <svg viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
                                 </svg>
                             </div>
-                            <h2 class="title">Acesse sua conta</h2>
+                            <h2 className="title">Acesse sua conta</h2>
                             <div className="input-field">
                                 <EmailIcon />
                                 <input
@@ -137,13 +137,13 @@ const LoginScreen = () => {
                             <button type="submit" className="btn solid" disabled={isLoginLoading}>
                                 {isLoginLoading ? 'Entrando...' : 'Login'}
                             </button>
-                            <div class="divider">
-                                <span class="divider-line"></span>
-                                <span class="divider-text">OU</span>
-                                <span class="divider-line"></span>
+                            <div className="divider">
+                                <span className="divider-line"></span>
+                                <span className="divider-text">OU</span>
+                                <span className="divider-line"></span>
                             </div>
 
-                            <button type="button" className="btn google-btn">
+                            <button type="button" className="google-btn">
                                 <GoogleIcon />
                                 <span>Entrar com Google</span>
                             </button>
@@ -151,12 +151,12 @@ const LoginScreen = () => {
 
                         {/* Formulário de Registro */}
                         <form onSubmit={handleRegisterSubmit} className="sign-up-form">
-                            <div class="logo">
+                            <div className="logo">
                                 <svg viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
                                 </svg>
                             </div>
-                            <h2 class="title">Crie sua conta</h2>
+                            <h2 className="title">Crie sua conta</h2>
                             <div className="input-field">
                                 <UserIcon />
                                 <input
@@ -286,29 +286,30 @@ const LoginScreen = () => {
 
                 /* Estilo Aprimorado para o Botão Google */
                 .google-btn {
-                    max-width: 380px; /* Garante que o botão não ultrapasse os outros inputs */
+                    max-width: 380px;
                     width: 100%;
                     background-color: #ffffff;
-                    color: #b6d5ffff; /* slate-700 */
+                    color: #334155; /* slate-700 */
                     border: 1px solid #cbd5e1; /* slate-300 */
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    gap: 12px; /* Espaçamento ajustado */
-                    text-transform: none; /* Manter o texto em caixa normal */
+                    gap: 12px;
+                    text-transform: none;
                     font-family: 'Lato', sans-serif;
                     font-weight: 700;
                     height: 49px;
                     border-radius: 49px;
                     cursor: pointer;
                     transition: all 0.3s ease;
+                    margin: 0; /* Remove a margem herdada do .btn */
                 }
 
                 .google-btn:hover {
                     border-color: #94a3b8; /* slate-400 */
                     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
                 }
-
+                
                 .login-container {
                     position: relative;
                     width: 100%;
@@ -508,12 +509,10 @@ const LoginScreen = () => {
                     transition-delay: 0.4s;
                 }
 
-                /* ---- CORREÇÃO DA ANIMAÇÃO ---- */
                 .right-panel .content,
                 .right-panel .image {
                     transform: translateX(800px);
                 }
-                /* ---- FIM DA CORREÇÃO ---- */
 
                 /* Animação com a classe sign-up-mode */
                 .login-container.sign-up-mode:before {
