@@ -6,7 +6,7 @@ const nextConfig = {
         return [
             {
                 source: '/api/:path*', // Captura todas as rotas que começam com /api
-                destination: 'http://projeto-cortex-api:5000/api/:path*', // E as redireciona para a sua API na porta 5000
+                destination: `${process.env.NEXT_PUBLIC_API_PROXY_URL}:${process.env.NEXT_PUBLIC_API_PORT}/api/:path*`, // E as redireciona para a sua API na porta 5000
             },
         ];
     },

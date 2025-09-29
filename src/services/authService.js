@@ -32,7 +32,7 @@ function deleteSession(ctx = null) {
  */
 async function login({ email, password }) {
 
-    const response = await fetch('/api/v1/auth/login', {
+    const response = await fetch(`/${process.env.NEXT_PUBLIC_API_LOGIN_PATH}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
