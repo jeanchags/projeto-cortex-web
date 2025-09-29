@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import Image from 'next/image'; // Usando o componente Image do Next.js para otimização
 import { authService } from "@/services/authService";
 
+// Componentes de Ícones (SVG embutido para simplicidade)
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="form-icon">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -23,28 +23,30 @@ const LoginScreen = () => {
     const router = useRouter();
     const [isSignUpMode, setIsSignUpMode] = useState(false);
 
-    // Estado unificado para os formulários para simplificar o gerenciamento
+    // Estados para o formulário de Login
     const [loginValues, setLoginValues] = useState({ email: '', password: '' });
+    const [loginError, setLoginError] = useState(null);
+    const [isLoginLoading, setIsLoginLoading] = useState(false);
+
+    // Estados para o formulário de Registro
     const [regValues, setRegValues] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+    const [regError, setRegError] = useState(null);
+    const [isRegLoading, setIsRegLoading] = useState(false);
 
-    // Estados para feedback ao usuário (erros e carregamento)
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const handleLoginChange = (e) => {
-        setError(''); // Limpa o erro ao digitar
-        setLoginValues({ ...loginValues, [e.target.name]: e.target.value });
+    const handleLoginChange = (event) => {
+        const { name, value } = event.target;
+        setLoginValues(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleRegisterChange = (e) => {
-        setError(''); // Limpa o erro ao digitar
-        setRegValues({ ...regValues, [e.target.name]: e.target.value });
+    const handleRegisterChange = (event) => {
+        const { name, value } = event.target;
+        setRegValues(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleLoginSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+    const handleLoginSubmit = async (event) => {
+        event.preventDefault();
+        setLoginError(null);
+        setIsLoginLoading(true);
         try {
             await authService.login({
                 email: loginValues.email,
@@ -52,20 +54,21 @@ const LoginScreen = () => {
             });
             router.push('/dashboard');
         } catch (err) {
-            setError(err.message || 'Falha no login. Verifique suas credenciais.');
+            setLoginError(err.message);
         } finally {
-            setLoading(false);
+            setIsLoginLoading(false);
         }
     };
 
-    const handleRegisterSubmit = async (e) => {
-        e.preventDefault();
+    const handleRegisterSubmit = async (event) => {
+        event.preventDefault();
+        setRegError(null);
+
         if (regValues.password !== regValues.confirmPassword) {
-            setError('As senhas não coincidem.');
+            setRegError('As senhas não coincidem.');
             return;
         }
-        setLoading(true);
-        setError('');
+        setIsRegLoading(true);
         try {
             await authService.register({
                 name: regValues.name,
@@ -73,14 +76,12 @@ const LoginScreen = () => {
                 password: regValues.password,
             });
             alert('Conta criada com sucesso! Por favor, faça o login para continuar.');
-            setIsSignUpMode(false);
-            // Limpa os formulários para segurança e usabilidade
+            setIsSignUpMode(false); // Volta para a tela de login
             setRegValues({ name: '', email: '', password: '', confirmPassword: '' });
-            setLoginValues({ email: regValues.email, password: '' }); // Preenche o e-mail no login
         } catch (err) {
-            setError(err.message || 'Não foi possível registrar. Tente novamente.');
+            setRegError(err.message);
         } finally {
-            setLoading(false);
+            setIsRegLoading(false);
         }
     };
 
@@ -89,50 +90,87 @@ const LoginScreen = () => {
             <div className={`login-container ${isSignUpMode ? "sign-up-mode" : ""}`}>
                 <div className="forms-container">
                     <div className="signin-signup">
+                        {/* Formulário de Login */}
                         <form onSubmit={handleLoginSubmit} className="sign-in-form">
                             <h2 className="title">Faça seu login</h2>
                             <div className="input-field">
-                                <UserIcon />
-                                <input type="email" placeholder="Email" name="email" value={loginValues.email} onChange={handleLoginChange} required />
+                                <EmailIcon />
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    name="email"
+                                    value={loginValues.email}
+                                    onChange={handleLoginChange}
+                                    required
+                                    />
                             </div>
                             <div className="input-field">
                                 <LockIcon />
-                                <input 
+                                <input
                                     type="password"
                                     placeholder="Senha"
-                                    name="password" 
-                                    value={loginValues.password} 
-                                    onChange={handleLoginChange} 
-                                    required 
+                                    name="password"
+                                    value={loginValues.password}
+                                    onChange={handleLoginChange}
+                                    required
                                 />
                             </div>
-                            {error && !isSignUpMode && <p className="error-message">{error}</p>}
-                            <button type="submit" className="btn solid" disabled={loading}>
-                                {loading && !isSignUpMode ? 'Entrando...' : 'Login'}
+                            {loginError && <p className="error-message">{loginError}</p>}
+                            <button type="submit" className="btn solid" disabled={isLoginLoading}>
+                                {isLoginLoading ? 'Entrando...' : 'Login'}
                             </button>
                         </form>
 
+                        {/* Formulário de Registro */}
                         <form onSubmit={handleRegisterSubmit} className="sign-up-form">
                             <h2 className="title">Crie sua conta</h2>
                             <div className="input-field">
                                 <UserIcon />
-                                <input type="text" placeholder="Nome Completo" name="name" value={regValues.name} onChange={handleRegisterChange} required />
+                                <input
+                                    type="text"
+                                    placeholder="Nome Completo"
+                                    name="name"
+                                    value={regValues.name}
+                                    onChange={handleRegisterChange}
+                                    required
+                                />
                             </div>
                             <div className="input-field">
                                 <EmailIcon />
-                                <input type="email" placeholder="Email" name="email" value={regValues.email} onChange={handleRegisterChange} required />
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    name="email"
+                                    value={regValues.email}
+                                    onChange={handleRegisterChange}
+                                    required
+                                />
                             </div>
                             <div className="input-field">
                                 <LockIcon />
-                                <input type="password" placeholder="Senha" name="password" value={regValues.password} onChange={handleRegisterChange} required minLength="6" />
+                                <input
+                                    type="password"
+                                    placeholder="Senha"
+                                    name="password"
+                                    value={regValues.password}
+                                    onChange={handleRegisterChange}
+                                    required
+                                />
                             </div>
                             <div className="input-field">
                                 <LockIcon />
-                                <input type="password" placeholder="Confirme a Senha" name="confirmPassword" value={regValues.confirmPassword} onChange={handleRegisterChange} required />
+                                <input
+                                    type="password"
+                                    placeholder="Confirme a Senha"
+                                    name="confirmPassword"
+                                    value={regValues.confirmPassword}
+                                    onChange={handleRegisterChange}
+                                    required
+                                />
                             </div>
-                            {error && isSignUpMode && <p className="error-message">{error}</p>}
-                            <button type="submit" className="btn" disabled={loading}>
-                                {loading && isSignUpMode ? 'Criando...' : 'Criar Conta'}
+                            {regError && <p className="error-message">{regError}</p>}
+                            <button type="submit" className="btn" disabled={isRegLoading}>
+                                {isRegLoading ? 'Registrando...' : 'Registrar'}
                             </button>
                         </form>
                     </div>
@@ -142,35 +180,48 @@ const LoginScreen = () => {
                     <div className="panel left-panel">
                         <div className="content">
                             <h3>Ainda não tem conta?</h3>
-                            <p>Comece sua jornada de insights hoje. Crie sua conta e desbloqueie o potencial dos seus dados.</p>
-                            <button className="btn transparent" onClick={() => { setIsSignUpMode(true); setError(''); }}>
+                            <p>
+                                Comece sua jornada de insights hoje. Crie sua conta e desbloqueie o potencial dos seus dados.
+                            </p>
+                            <button className="btn transparent" onClick={() => setIsSignUpMode(true)}>
                                 Crie agora
                             </button>
                         </div>
-                        <Image src="https://raw.githubusercontent.com/adamiqshan/animated-login-signup-page/main/img/log.svg" width={400} height={400} className="image" alt="Login illustration" />
+                        <img src="https://raw.githubusercontent.com/adamiqshan/animated-login-signup-page/main/img/log.svg" className="image" alt="" />
                     </div>
                     <div className="panel right-panel">
                         <div className="content">
                             <h3>Já possui uma conta?</h3>
-                            <p>Foco no que importa: a evolução. Acesse sua conta para continuar de onde parou.</p>
-                            <button className="btn transparent" onClick={() => { setIsSignUpMode(false); setError(''); }}>
+                            <p>
+                                Foco no que importa: a evolução. Acesse sua conta para continuar de onde parou.
+                            </p>
+                            <button className="btn transparent" onClick={() => setIsSignUpMode(false)}>
                                 Faça login
                             </button>
                         </div>
-                        <Image src="https://raw.githubusercontent.com/adamiqshan/animated-login-signup-page/main/img/register.svg" width={400} height={400} className="image" alt="Register illustration" />
+                        <img src="https://raw.githubusercontent.com/adamiqshan/animated-login-signup-page/main/img/register.svg" className="image" alt="" />
                     </div>
                 </div>
             </div>
 
             <style jsx global>{`
-                /* Estilos Globais para a página de Login - para evitar conflitos, usei um container com classe específica */
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body,
+                input {
+                    font-family: 'Lato', sans-serif;
+                }
+
                 .login-container {
                     position: relative;
                     width: 100%;
-                    background-color: #fff;
                     min-height: 100vh;
+                    background-color: #f8fafc;
                     overflow: hidden;
-                    font-family: 'Lato', sans-serif;
                 }
 
                 .login-container:before {
@@ -239,21 +290,20 @@ const LoginScreen = () => {
                     max-width: 380px;
                     width: 100%;
                     background-color: #f0f0f0;
-                    margin: 10px 0;
                     height: 55px;
+                    margin: 10px 0;
                     border-radius: 55px;
                     display: grid;
                     grid-template-columns: 15% 85%;
                     padding: 0 0.4rem;
-                    position: relative;
+                    align-items: center;
                 }
-
+                
                 .input-field .form-icon {
-                    text-align: center;
-                    line-height: 55px;
+                    height: 1.5rem; /* 24px */
+                    width: 1.5rem; /* 24px */
                     color: #acacac;
-                    transition: 0.5s;
-                    font-size: 1.1rem;
+                    margin: 0 auto;
                 }
 
                 .input-field input {
@@ -291,18 +341,14 @@ const LoginScreen = () => {
                 }
                 
                 .btn:disabled {
-                    background-color: #cccccc;
+                    background-color: #9ca3af;
                     cursor: not-allowed;
                 }
-
-                .btn.transparent {
-                    margin: 0;
-                    background: none;
-                    border: 2px solid #fff;
-                    width: 130px;
-                    height: 41px;
-                    font-weight: 600;
-                    font-size: 0.8rem;
+                
+                .error-message {
+                    color: #ef4444; /* red-500 */
+                    font-size: 0.875rem;
+                    margin-top: 0.25rem;
                 }
 
                 .panels-container {
@@ -352,21 +398,30 @@ const LoginScreen = () => {
                     padding: 0.7rem 0;
                 }
 
+                .btn.transparent {
+                    margin: 0;
+                    background: none;
+                    border: 2px solid #fff;
+                    width: 130px;
+                    height: 41px;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                }
+
                 .image {
                     width: 100%;
                     transition: transform 1.1s ease-in-out;
                     transition-delay: 0.4s;
                 }
-                
-                .error-message {
-                    color: #ef4444; /* red-500 */
-                    font-size: 0.875rem;
-                    margin-top: 5px;
-                    max-width: 380px;
-                    text-align: center;
-                }
 
-                /* Animação */
+                /* ---- CORREÇÃO DA ANIMAÇÃO ---- */
+                .right-panel .content,
+                .right-panel .image {
+                    transform: translateX(800px);
+                }
+                /* ---- FIM DA CORREÇÃO ---- */
+
+                /* Animação com a classe sign-up-mode */
                 .login-container.sign-up-mode:before {
                     transform: translate(100%, -50%);
                     right: 52%;
@@ -404,8 +459,114 @@ const LoginScreen = () => {
                     pointer-events: all;
                 }
 
+                /* Media Queries para Responsividade */
                 @media (max-width: 870px) {
-                  /* Estilos responsivos... */
+                    .login-container {
+                        min-height: 800px;
+                        height: 100vh;
+                    }
+                    .signin-signup {
+                        width: 100%;
+                        top: 95%;
+                        transform: translate(-50%, -100%);
+                        transition: 1s 0.8s ease-in-out;
+                    }
+                    .signin-signup,
+                    .login-container.sign-up-mode .signin-signup {
+                        left: 50%;
+                    }
+                    .panels-container {
+                        grid-template-columns: 1fr;
+                        grid-template-rows: 1fr 2fr 1fr;
+                    }
+                    .panel {
+                        flex-direction: row;
+                        justify-content: space-around;
+                        align-items: center;
+                        padding: 2.5rem 8%;
+                        grid-column: 1 / 2;
+                    }
+                    .right-panel {
+                        grid-row: 3 / 4;
+                    }
+                    .left-panel {
+                        grid-row: 1 / 2;
+                    }
+                    .image {
+                        width: 200px;
+                        transition: transform 0.9s ease-in-out;
+                        transition-delay: 0.6s;
+                    }
+                    .panel .content {
+                        padding-right: 15%;
+                        transition: transform 0.9s ease-in-out;
+                        transition-delay: 0.8s;
+                    }
+                    .panel h3 {
+                        font-size: 1.2rem;
+                    }
+                    .panel p {
+                        font-size: 0.7rem;
+                        padding: 0.5rem 0;
+                    }
+                    .btn.transparent {
+                        width: 110px;
+                        height: 35px;
+                        font-size: 0.7rem;
+                    }
+                    .login-container:before {
+                        width: 1500px;
+                        height: 1500px;
+                        transform: translateX(-50%);
+                        left: 30%;
+                        bottom: 68%;
+                        right: initial;
+                        top: initial;
+                        transition: 2s ease-in-out;
+                    }
+                    .login-container.sign-up-mode:before {
+                        transform: translate(-50%, 100%);
+                        bottom: 32%;
+                        right: initial;
+                    }
+                    .login-container.sign-up-mode .left-panel .image,
+                    .login-container.sign-up-mode .left-panel .content {
+                        transform: translateY(-300px);
+                    }
+                    .login-container.sign-up-mode .right-panel .image,
+                    .login-container.sign-up-mode .right-panel .content {
+                        transform: translateY(0px);
+                    }
+                    .right-panel .image,
+                    .right-panel .content {
+                        transform: translateY(300px);
+                    }
+                    .login-container.sign-up-mode .signin-signup {
+                        top: 5%;
+                        transform: translate(-50%, 0);
+                    }
+                }
+                @media (max-width: 570px) {
+                    form {
+                        padding: 0 1.5rem;
+                    }
+                    .image {
+                        display: none;
+                    }
+                    .panel .content {
+                        padding: 0.5rem 1rem;
+                    }
+                    .login-container {
+                        padding: 1.5rem;
+                    }
+                    .login-container:before {
+                        bottom: 72%;
+                        left: 50%;
+                    }
+                    .login-container.sign-up-mode:before {
+                        bottom: 28%;
+                        left: 50%;
+                    }
                 }
             `}
             </style>
