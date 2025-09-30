@@ -2,14 +2,21 @@ import { setCookie, parseCookies, destroyCookie } from 'nookies';
 import { useRouter } from 'next/router';
 
 const CORTEX_SESSION_TOKEN = 'CORTEX_SESSION_TOKEN';
+const CORTEX_USER_INFO = 'CORTEX_USER_INFO';
 
 /**
  * Inicia a sessão do usuário, armazenando o token em um cookie.
  * @param {string} token - O token de autenticação a ser armazenado.
+ * @param {object} user - O objeto com os dados do usuário (ex: { name, email }).
  */
-function startSession(token) {
+function startSession({ token, user }) {
     setCookie(null, CORTEX_SESSION_TOKEN, token, {
         maxAge: 30 * 24 * 60 * 60, // 30 dias
+        path: '/',
+    });
+    // Armazena os dados do usuário como uma string JSON
+    setCookie(null, CORTEX_USER_INFO, JSON.stringify(user), {
+        maxAge: 30 * 24 * 60 * 60,
         path: '/',
     });
 }
@@ -20,7 +27,25 @@ function startSession(token) {
  */
 function deleteSession(ctx = null) {
     destroyCookie(ctx, CORTEX_SESSION_TOKEN);
+    destroyCookie(ctx, CORTEX_USER_INFO);
+}
 
+/**
+ * Retorna os dados do usuário da sessão.
+ * @param {object} ctx - O contexto do Next.js (opcional).
+ * @returns {object|null} - O objeto do usuário ou null.
+ */
+function getUserSession(ctx = null) {
+    const { [CORTEX_USER_INFO]: userCookie } = parseCookies(ctx);
+    if (!userCookie) {
+        return null;
+    }
+    try {
+        return JSON.parse(userCookie);
+    } catch (error) {
+        console.error('Failed to parse user session cookie:', error);
+        return null;
+    }
 }
 
 /**
@@ -129,6 +154,7 @@ export const authService = {
     register,
     startSession,
     deleteSession,
+    getUserSession,
     getSessionToken: (ctx = null) => {
         const cookies = parseCookies(ctx);
         return cookies[CORTEX_SESSION_TOKEN] || null;

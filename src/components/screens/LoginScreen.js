@@ -69,7 +69,7 @@ const LoginScreen = () => {
                 password: loginValues.password,
             });
 
-            authService.startSession(data.token);
+            authService.startSession(data);
             router.push('/dashboard');
         } catch (err) {
             setLoginError(err.message);

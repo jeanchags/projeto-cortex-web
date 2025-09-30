@@ -1,12 +1,13 @@
 import '@/styles/globals.css';
+import { AuthProvider } from '@/context/AuthContext'; // Importe o AuthProvider
 
-/**
- * Este é o componente raiz da aplicação.
- * É usado para inicializar páginas e é o lugar ideal para
- * importar estilos globais.
- */
 function MyApp({ Component, pageProps }) {
-    return <Component {...pageProps} />;
+    return (
+        // Envolva o Component com o AuthProvider
+        <AuthProvider>
+            <Component {...pageProps} />
+        </AuthProvider>
+    );
 }
 
 export default MyApp;

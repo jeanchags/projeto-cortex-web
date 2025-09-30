@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/context/AuthContext';
+import { generateColorFromString } from '@/utils/colorUtils';
+
 
 /**
  * Componente de Navegação Principal
@@ -13,6 +16,7 @@ const Navbar = ({ hideOnPrint = false }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const router = useRouter();
+    const { user } = useAuth();
 
     /**
      * Alterna a visibilidade do dropdown do perfil.
@@ -39,6 +43,10 @@ const Navbar = ({ hideOnPrint = false }) => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [isDropdownOpen]);
+
+    const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
+    const avatarBackgroundColor = generateColorFromString(user?.name || '');
+
 
     return (
         <nav className={`bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-20 ${hideOnPrint ? 'print:hidden' : ''}`}>
@@ -68,22 +76,27 @@ const Navbar = ({ hideOnPrint = false }) => {
                         </div>
                     </div>
 
-                    {/* Avatar do Usuário e Dropdown */}
+                                       {/* Avatar do Usuário e Dropdown */}
                     <div className="relative" ref={dropdownRef}>
                         <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
-                            <img
-                                className="h-9 w-9 rounded-full ring-2 ring-offset-2 ring-blue-800 cursor-pointer"
-                                src="https://placehold.co/100x100/E2E8F0/4A5568?text=A"
-                                alt="Avatar do usuário"
-                            />
+                            {user ? (
+                                <div
+                                    className="h-9 w-9 rounded-full ring-2 ring-offset-2 ring-blue-800 flex items-center justify-center text-white font-bold"
+                                    style={{ backgroundColor: avatarBackgroundColor }}
+                                >
+                                    {userInitial}
+                                </div>
+                            ) : (
+                                <div className="h-9 w-9 rounded-full bg-gray-200 animate-pulse"></div>
+                            )}
                         </button>
 
                         {/* Menu Dropdown */}
-                        {isDropdownOpen && (
+                        {isDropdownOpen && user && ( // Só mostra o dropdown se o usuário existir
                             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30 ring-1 ring-black ring-opacity-5">
                                 <div className="px-4 py-2 text-sm text-gray-700">
-                                    <p className="font-semibold">Usuário</p>
-                                    <p className="text-xs text-gray-500 truncate">usuario@email.com</p>
+                                    <p className="font-semibold">{user.name}</p>
+                                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                 </div>
                                 <div className="border-t border-gray-100"></div>
                                 <Link href="/logout" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
