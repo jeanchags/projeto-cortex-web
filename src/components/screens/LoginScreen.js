@@ -29,6 +29,11 @@ const GoogleIcon = () => (
     </svg>
 );
 
+const CortexIcon = () => (
+    <svg viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
+    </svg>
+);
 
 const LoginScreen = () => {
     const router = useRouter();
