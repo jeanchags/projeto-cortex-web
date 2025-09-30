@@ -1,36 +1,18 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import {authService} from "@/services/authService";
+import { useAuth } from '@/context/AuthContext';
 
 
-export default function Logout() {
+export default function LogoutPage() {
 
     const router = useRouter();
+    const { logout } = useAuth();
+
     useEffect(() => {
-        authService.deleteSession();
+        logout();
         router.push('/login');
     }, [router]);
+
     return null;
 }
 
-/**
- * Verifica no lado do servidor se o usuário já possui uma sessão ativa.
- * Se não, redireciona para o login.
- * @param {object} ctx - O contexto do Next.js.
- */
-export async function getServerSideProps(ctx) {
-    const token = authService.getSessionToken(ctx);
-
-    if (!token) {
-        return {
-            redirect: {
-                destination: '/login',
-                permanent: false,
-            },
-        };
-    }
-
-    return {
-        props: {},
-    };
-}

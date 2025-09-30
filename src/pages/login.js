@@ -17,8 +17,10 @@ export default function LoginPage() {
  */
 export async function getServerSideProps(ctx) {
     const token = authService.getSessionToken(ctx);
+    const user = authService.getUserSession(ctx);
 
     if (token) {
+        
         return {
             redirect: {
                 destination: '/dashboard',

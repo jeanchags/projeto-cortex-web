@@ -1,10 +1,9 @@
 import DashboardScreen from '@/components/screens/DashboardScreen';
-import { withAuth } from '@/hoc/withAuth';
 import { authService } from '@/services/authService';
 
 
-export default function DashboardPage() {
-    return <DashboardScreen />;
+export default function DashboardPage({user}) {
+    return <DashboardScreen user={user} />;
 }
 
 /**
@@ -14,8 +13,9 @@ export default function DashboardPage() {
  */
 export async function getServerSideProps(ctx) {
     const token = authService.getSessionToken(ctx);
+    const user = authService.getUserSession(ctx);
 
-    if (!token) {
+    if (!token || !user) {
         // Redireciona para a página de login se não houver token.
         return {
             redirect: {
@@ -26,6 +26,8 @@ export async function getServerSideProps(ctx) {
     }
 
     return {
-        props: {}, // Permite a renderização da página se o token existir.
+        props: {
+            user,
+        },
     };
 }

@@ -1,11 +1,14 @@
 import '@/styles/globals.css';
-import { AuthProvider } from '@/context/AuthContext'; // Importe o AuthProvider
+import { AuthProvider } from '@/context/AuthContext';
 
 function MyApp({ Component, pageProps }) {
+
+    const { user, ...restPageProps } = pageProps;
+
     return (
-        // Envolva o Component com o AuthProvider
-        <AuthProvider>
-            <Component {...pageProps} />
+
+        <AuthProvider pageUser={user}>
+            <Component {...restPageProps} />
         </AuthProvider>
     );
 }

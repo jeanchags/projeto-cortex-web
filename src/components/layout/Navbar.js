@@ -47,7 +47,6 @@ const Navbar = ({ hideOnPrint = false }) => {
     const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : '?';
     const avatarBackgroundColor = generateColorFromString(user?.name || '');
 
-
     return (
         <nav className={`bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-20 ${hideOnPrint ? 'print:hidden' : ''}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,7 +75,7 @@ const Navbar = ({ hideOnPrint = false }) => {
                         </div>
                     </div>
 
-                                       {/* Avatar do Usuário e Dropdown */}
+                    {/* Avatar do Usuário e Dropdown */}
                     <div className="relative" ref={dropdownRef}>
                         <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
                             {user ? (
