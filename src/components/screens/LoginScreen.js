@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { authService } from "@/services/authService";
+import { useAuth } from '@/context/AuthContext';
 
 // Componentes de Ícones (SVG embutido para simplicidade)
 const UserIcon = () => (
@@ -36,6 +36,7 @@ const CortexIcon = () => (
 );
 
 const LoginScreen = () => {
+    const { login } = useAuth();
     const router = useRouter();
     const [isSignUpMode, setIsSignUpMode] = useState(false);
 
@@ -64,12 +65,8 @@ const LoginScreen = () => {
         setLoginError(null);
         setIsLoginLoading(true);
         try {
-            const data = await authService.login({
-                email: loginValues.email,
-                password: loginValues.password,
-            });
-
-            authService.startSession(data);
+            
+            await login(loginValues.email, loginValues.password);
             router.push('/dashboard');
         } catch (err) {
             setLoginError(err.message);
