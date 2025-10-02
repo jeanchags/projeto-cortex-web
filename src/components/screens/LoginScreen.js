@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 
-// Componentes de Ícones (SVG embutido para simplicidade)
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="form-icon">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -18,8 +17,6 @@ const EmailIcon = () => (
         <path strokeLinecap="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 10-2.636 6.364M16.5 12V8.25" />
     </svg>
 );
-
-// Ícone do Google como um componente React para melhor controle
 const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M48 24C48 22.0427 47.8438 20.125 47.5469 18.25H24.4688V28.8281H37.8281C37.2656 31.8906 35.5312 34.5 32.9531 36.1719V42.5312H41.0156C45.3281 38.4844 48 31.8906 48 24Z" fill="#4285F4"/>
@@ -29,14 +26,9 @@ const GoogleIcon = () => (
     </svg>
 );
 
-const CortexIcon = () => (
-    <svg viewBox="0 0 28 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 0L27.8564 8V24L14 32L0.143594 24V8L14 0Z" />
-    </svg>
-);
 
 const LoginScreen = () => {
-    const { login } = useAuth();
+    const { login, register } = useAuth();
     const router = useRouter();
     const [isSignUpMode, setIsSignUpMode] = useState(false);
 
@@ -65,7 +57,6 @@ const LoginScreen = () => {
         setLoginError(null);
         setIsLoginLoading(true);
         try {
-            
             await login(loginValues.email, loginValues.password);
             router.push('/dashboard');
         } catch (err) {
@@ -85,11 +76,11 @@ const LoginScreen = () => {
         }
         setIsRegLoading(true);
         try {
-            await authService.register({
-                name: regValues.name,
-                email: regValues.email,
-                password: regValues.password,
-            });
+            await register(
+                regValues.name,
+                regValues.email,
+                regValues.password,
+            );
             alert('Conta criada com sucesso! Por favor, faça o login para continuar.');
             setIsSignUpMode(false); // Volta para a tela de login
             setRegValues({ name: '', email: '', password: '', confirmPassword: '' });
@@ -122,7 +113,7 @@ const LoginScreen = () => {
                                     value={loginValues.email}
                                     onChange={handleLoginChange}
                                     required
-                                    />
+                                />
                             </div>
                             <div className="input-field">
                                 <LockIcon />

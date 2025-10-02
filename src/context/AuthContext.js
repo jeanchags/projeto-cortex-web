@@ -42,6 +42,26 @@ export function AuthProvider({ children, pageUser }) {
         }
     };
 
+    /**
+     * Nova função de registro:
+     * 1. Chama o serviço de registro (API).
+     * 2. Propaga erros para a UI, se houver.
+     * @param {string} name O nome do usuário.
+     * @param {string} email O email do usuário.
+     * @param {string} password A senha do usuário.
+     * @throws {Error} Lança um erro se o registro falhar.
+     */
+    const register = async (name, email, password) => {
+        try {
+            // Apenas chama o serviço de registro. A tela de login cuidará do resto.
+            await authService.register({ name, email, password });
+        } catch (error) {
+            console.error('Falha no registro a partir do AuthContext:', error);
+            // Propaga o erro para a LoginScreen exibir a mensagem.
+            throw error;
+        }
+    };
+
     const logout = () => {
         authService.deleteSession();
         setUser(null);
@@ -51,7 +71,8 @@ export function AuthProvider({ children, pageUser }) {
     const value = {
         user,
         isAuthenticated: !!user,
-        login, // <--- Exporta a nova função de login
+        login,
+        register,
         logout,
     };
 
