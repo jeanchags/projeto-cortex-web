@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 /**
  * Componente ProfileCard
- * Exibe um card individual de perfil com link para os formulários.
+ * Exibe um card individual de perfil com link para a página de detalhes/histórico.
  * @param {object} props - Propriedades do componente.
  * @param {object} props.profile - O objeto de dados do perfil vindo da API.
  */
@@ -17,8 +17,8 @@ const ProfileCard = ({ profile }) => {
 
     return (
         <Link
-            href={`/forms?profileId=${profile.id}`}
-            className="cursor-pointer bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all"
+            href={`/profiles/${profile.id}`}
+            className="cursor-pointer bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-xl hover:-translate-y-1 transition-all duration-200 hover:border-indigo-500 border border-transparent"
         >
             <div>
                 <div className="flex items-center justify-between">
