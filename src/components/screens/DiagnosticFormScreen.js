@@ -82,8 +82,7 @@ const DiagnosticFormScreen = () => {
             // Chama a função do serviço para enviar os dados
             const result = await submitFormAnswers(payload);
 
-            // Redireciona para a tela do relatório recém-gerado
-            // O ID do relatório virá da resposta da API (ex: result.reportId)
+            // *** TAREFA FE-15: Redireciona para a tela do relatório recém-gerado ***
             router.push(`/reports/${result.reportId}`);
 
         } catch (err) {

@@ -61,6 +61,51 @@ const ProfileHistoryScreen = ({ profileId }) => {
         }).replace(' ', ' de ').replace(',', ' às');
     };
 
+    const renderTimelineItemContent = (event) => {
+        const commonContent = (
+            <>
+                <div className="flex justify-between items-center">
+                    <h3 className="text-md font-bold text-gray-800">{event.title}</h3>
+                    <p className="text-xs text-gray-500 whitespace-nowrap ml-4">
+                        {formatTimestamp(event.timestamp)}
+                    </p>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">por <span className="font-semibold">{event.author}</span></p>
+                <p className="text-sm text-gray-500 mt-2">{event.details}</p>
+            </>
+        );
+
+        // *** TAREFA FE-15: Torna o item de relatório clicável ***
+        if (event.type === 'report') {
+            return (
+                <Link href={`/reports/${event.id}`} className="block hover:bg-slate-50 rounded-lg transition-colors">
+                    <div className="min-w-0 flex-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+                        {commonContent}
+                        <div className="mt-3 text-right">
+                             <span className="text-sm font-semibold text-blue-600 hover:text-blue-800">
+                                Ver Relatório &rarr;
+                            </span>
+                        </div>
+                    </div>
+                </Link>
+            );
+        }
+
+        // Para outros tipos de evento, mantém o comportamento anterior
+        return (
+            <div className="min-w-0 flex-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+                {commonContent}
+                {event.link && (
+                    <div className="mt-3 text-right">
+                        <Link href={event.link} className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                            Ver Detalhes &rarr;
+                        </Link>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     // --- LÓGICA DE RENDERIZAÇÃO CONDICIONAL ---
     const renderContent = () => {
         if (loading) {
@@ -98,21 +143,7 @@ const ProfileHistoryScreen = ({ profileId }) => {
                                                 <Icon />
                                             </span>
                                         </div>
-                                        <div className="min-w-0 flex-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                                            <div className="flex justify-between items-center">
-                                                <h3 className="text-md font-bold text-gray-800">{event.title}</h3>
-                                                <p className="text-xs text-gray-500 whitespace-nowrap ml-4">
-                                                    {formatTimestamp(event.timestamp)}
-                                                </p>
-                                            </div>
-                                            <p className="text-sm text-gray-600 mt-1">por <span className="font-semibold">{event.author}</span></p>
-                                            <p className="text-sm text-gray-500 mt-2">{event.details}</p>
-                                            <div className="mt-3 text-right">
-                                                <Link href={event.link} className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
-                                                    Ver Detalhes &rarr;
-                                                </Link>
-                                            </div>
-                                        </div>
+                                        {renderTimelineItemContent(event)}
                                     </div>
                                 </div>
                             </li>
