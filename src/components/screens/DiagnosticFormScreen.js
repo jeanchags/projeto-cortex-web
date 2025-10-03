@@ -2,18 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { getFormById } from '@/services/formService';
+// Importa o novo serviço de submissão
+import { getFormById, submitFormAnswers } from '@/services/formService';
 import Navbar from '../layout/Navbar';
 import Alert from '@/components/common/Alert';
 
 /**
- * Componente DiagnosticFormScreen (Tarefa FE-12)
- * Busca e renderiza dinamicamente um formulário de diagnóstico a partir da API,
- * gerencia o estado das respostas e prepara para submissão.
+ * Componente DiagnosticFormScreen (Tarefa FE-12 e FE-13)
+ * Busca e renderiza dinamicamente um formulário, gerencia o estado das respostas,
+ * e lida com a submissão para a API, incluindo estados de loading e erro.
  */
 const DiagnosticFormScreen = () => {
     const router = useRouter();
-    const { formId } = router.query; // Obtém o ID do formulário da URL, futuramente
+    // Obtém o ID do formulário e do perfil da URL
+    const { formId, profileId } = router.query;
 
     // Estados para os dados do formulário e controle de UI
     const [form, setForm] = useState(null);
@@ -23,30 +25,35 @@ const DiagnosticFormScreen = () => {
     // Estado para armazenar as respostas do usuário { questionId: optionId }
     const [answers, setAnswers] = useState({});
 
+    // *** NOVOS ESTADOS para gerenciar o processo de submissão ***
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submissionError, setSubmissionError] = useState(null);
+
+
     useEffect(() => {
-        // Usa um ID mockado enquanto a navegação não passa o ID real
+        // Usa um ID mockado se não vier da URL, para desenvolvimento
         const idToFetch = formId || 'form-01';
 
-        const fetchForm = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const formData = await getFormById(idToFetch);
-                setForm(formData);
-            } catch (err) {
-                setError(err.message || 'Não foi possível carregar o formulário. Tente novamente.');
-            } finally {
-                setLoading(false);
-            }
-        };
+        if(router.isReady) { // Garante que os query params estão disponíveis
+            const fetchForm = async () => {
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const formData = await getFormById(idToFetch);
+                    setForm(formData);
+                } catch (err) {
+                    setError(err.message || 'Não foi possível carregar o formulário. Tente novamente.');
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-        fetchForm();
-    }, [formId]);
+            fetchForm();
+        }
+    }, [formId, router.isReady]);
 
     /**
      * Atualiza o estado 'answers' quando o usuário seleciona uma opção.
-     * @param {string} questionId - O ID da pergunta.
-     * @param {string} optionId - O ID da opção selecionada.
      */
     const handleAnswerChange = (questionId, optionId) => {
         setAnswers(prevAnswers => ({
@@ -57,15 +64,38 @@ const DiagnosticFormScreen = () => {
 
     /**
      * Lida com a submissão do formulário.
-     * @param {React.FormEvent} e - O evento de submissão.
      */
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Respostas Finais:", answers);
-        // A lógica de envio para a API (POST /submissions) será implementada na tarefa FE-13.
+        setIsSubmitting(true);
+        setSubmissionError(null);
+
+        // Monta o payload conforme a especificação
+        const payload = {
+            profileId: profileId || "PROFILE_ID_MOCK", // Usa ID mock se não vier da URL
+            formId: form.id,
+            formVersion: form.version,
+            answers: answers,
+        };
+
+        try {
+            // Chama a função do serviço para enviar os dados
+            const result = await submitFormAnswers(payload);
+
+            // Redireciona para a tela do relatório recém-gerado
+            // O ID do relatório virá da resposta da API (ex: result.reportId)
+            router.push(`/reports/${result.reportId}`);
+
+        } catch (err) {
+            // Define a mensagem de erro para ser exibida no Alert
+            setSubmissionError(err.message || 'Ocorreu um erro inesperado. Tente novamente.');
+        } finally {
+            // Garante que o estado de 'submitting' seja resetado
+            setIsSubmitting(false);
+        }
     };
 
-    // Verifica se todas as perguntas foram respondidas para habilitar o botão
+    // Verifica se todas as perguntas foram respondidas
     const allQuestionsAnswered = form && Object.keys(answers).length === form.questions.length;
 
     // --- Renderização Condicional ---
@@ -110,8 +140,14 @@ const DiagnosticFormScreen = () => {
         <div className="min-h-screen bg-slate-50 font-lato">
             <Navbar />
             <main className="max-w-2xl mx-auto py-12 px-4">
-                <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl p-8">
-                    {/* Cabeçalho do Formulário */}
+                {/* *** NOVO: Alerta para erros de submissão *** */}
+                <Alert
+                    message={submissionError}
+                    type="error"
+                    onClose={() => setSubmissionError(null)}
+                />
+
+                <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl p-8 mt-4">
                     <div className="text-center border-b border-gray-200 pb-6 mb-8">
                         <h1 className="text-2xl font-montserrat text-blue-800">{form?.title}</h1>
                         <p className="text-gray-600 mt-2">
@@ -119,7 +155,6 @@ const DiagnosticFormScreen = () => {
                         </p>
                     </div>
 
-                    {/* Renderização Dinâmica das Questões */}
                     <div className="space-y-8">
                         {form?.questions.map((question, index) => (
                             <fieldset key={question.id} className="border-t border-gray-100 pt-6 first:border-t-0 first:pt-0">
@@ -153,14 +188,20 @@ const DiagnosticFormScreen = () => {
                         ))}
                     </div>
 
-                    {/* Botão de Submissão */}
                     <div className="mt-10 pt-6 border-t border-gray-200">
+                        {/* *** BOTÃO DE SUBMISSÃO ATUALIZADO *** */}
                         <button
                             type="submit"
-                            disabled={!allQuestionsAnswered}
-                            className="w-full px-6 py-4 bg-blue-800 text-white font-montserrat rounded-md shadow-md transition-all hover:bg-blue-900 hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none"
+                            disabled={!allQuestionsAnswered || isSubmitting}
+                            className="w-full px-6 py-4 bg-blue-800 text-white font-montserrat rounded-md shadow-md transition-all hover:bg-blue-900 hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
                         >
-                            Finalizar e Gerar Relatório
+                            {isSubmitting && (
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            )}
+                            {isSubmitting ? 'Enviando...' : 'Finalizar e Gerar Relatório'}
                         </button>
                     </div>
                 </form>
