@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import Alert from '@/components/common/Alert';
 
 const UserIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="form-icon">
@@ -42,6 +43,9 @@ const LoginScreen = () => {
     const [regError, setRegError] = useState(null);
     const [isRegLoading, setIsRegLoading] = useState(false);
 
+    // *** NOVO: Estado para controlar a mensagem de sucesso ***
+    const [successMessage, setSuccessMessage] = useState(null);
+
     const handleLoginChange = (event) => {
         const { name, value } = event.target;
         setLoginValues(prev => ({ ...prev, [name]: value }));
@@ -81,7 +85,7 @@ const LoginScreen = () => {
                 regValues.email,
                 regValues.password,
             );
-            alert('Conta criada com sucesso! Por favor, faça o login para continuar.');
+            setSuccessMessage('Conta criada com sucesso! Faça o login para continuar.');
             setIsSignUpMode(false); // Volta para a tela de login
             setRegValues({ name: '', email: '', password: '', confirmPassword: '' });
         } catch (err) {
@@ -93,6 +97,12 @@ const LoginScreen = () => {
 
     return (
         <>
+            {/* *** NOVO: Renderiza o componente de Alerta *** */}
+            <Alert
+                message={successMessage}
+                type="success"
+                onClose={() => setSuccessMessage(null)}
+            />
             <div className={`login-container ${isSignUpMode ? "sign-up-mode" : ""}`}>
                 <div className="forms-container">
                     <div className="signin-signup">

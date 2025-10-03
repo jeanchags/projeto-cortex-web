@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../layout/Navbar';
+import Alert from '@/components/common/Alert';
 
 
 // Dados mocados para as questões, baseados no protótipo
@@ -43,6 +44,9 @@ const FormsScreen = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [userAnswers, setUserAnswers] = useState({});
 
+    // *** NOVO: Estado para controlar a mensagem de sucesso ***
+    const [successMessage, setSuccessMessage] = useState(null);
+
     // --- Handlers de Navegação do Formulário ---
 
     const startForm = () => {
@@ -71,8 +75,8 @@ const FormsScreen = () => {
     const submitForm = () => {
         console.log("Formulário Finalizado:", userAnswers);
         // Em uma aplicação real, aqui os dados seriam enviados para uma API.
-        alert("Avaliação concluída com sucesso!");
-        router.push('/dashboard'); // Redireciona para o dashboard após a conclusão
+        setSuccessMessage("Avaliação concluída com sucesso!");
+        router.push('/reports'); // Redireciona para o relatório após a conclusão
     };
 
     // --- Funções de Renderização para cada Tela ---
@@ -182,6 +186,11 @@ const FormsScreen = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-lato">
+            <Alert
+                message={successMessage}
+                type="success"
+                onClose={() => setSuccessMessage(null)}
+            />
             <Navbar />
             <main className="px-4">
                 {currentScreen === 'intro' && renderIntroScreen()}
