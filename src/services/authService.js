@@ -1,3 +1,5 @@
+// src/services/authService.js
+
 import { setCookie, parseCookies, destroyCookie } from 'nookies';
 import { useRouter } from 'next/router';
 
@@ -179,7 +181,7 @@ async function verifyEmailToken(token) {
 }
 
 /**
- * NOVO: Envia a solicitação de redefinição de senha para a API.
+ * Envia a solicitação de redefinição de senha para a API.
  * @param {string} email - O e-mail do usuário que esqueceu a senha.
  * @returns {Promise<object>} - A resposta da API.
  * @throws {Error} - Lança um erro se a requisição falhar.
@@ -202,12 +204,38 @@ async function forgotPassword(email) {
     return data;
 }
 
+/**
+ * NOVO: Envia a nova senha para a API para redefinição.
+ * @param {string} token - O token de redefinição da URL.
+ * @param {string} password - A nova senha do usuário.
+ * @returns {Promise<object>} - A resposta da API.
+ * @throws {Error} - Lança um erro se a requisição falhar.
+ */
+async function resetPassword(token, password) {
+    const response = await fetch(`/api/v1/auth/reset-password/${token}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        throw new Error(data?.message || `Falha ao redefinir a senha (Status: ${response.status}).`);
+    }
+
+    return data;
+}
+
 
 export const authService = {
     login,
     register,
     verifyEmailToken,
-    forgotPassword, // <-- Exporta a nova função
+    forgotPassword,
+    resetPassword,
     startSession,
     deleteSession,
     getUserSession,
