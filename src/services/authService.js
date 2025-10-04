@@ -149,9 +149,40 @@ async function register({ name, email, password }) {
     return data;
 }
 
+/**
+ * Verifica o token de e-mail na API.
+ * @param {string} token - O token de verificação da URL.
+ * @returns {Promise<object>} - Uma promessa que resolve com os dados da resposta da API.
+ * @throws {Error} - Lança um erro se a verificação falhar.
+ */
+async function verifyEmailToken(token) {
+    try {
+        const response = await fetch(`/api/v1/auth/verify-email/${token}`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            // Se o backend retornar um erro (ex: 400 para token inválido),
+            // tentamos extrair a mensagem de erro do corpo da resposta.
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.message || `Falha ao verificar o e-mail (Status: ${response.status}).`);
+        }
+
+        // Para um GET bem-sucedido que redireciona, o corpo pode não ser JSON,
+        // mas tratamos o status 200 como sucesso aqui.
+        return { success: true };
+
+    } catch (error) {
+        console.error('Falha ao verificar o token de e-mail:', error);
+        throw error; // Propaga o erro para ser tratado pela UI.
+    }
+}
+
+
 export const authService = {
     login,
     register,
+    verifyEmailToken,
     startSession,
     deleteSession,
     getUserSession,
