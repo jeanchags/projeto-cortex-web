@@ -104,7 +104,7 @@ async function register({ name, email, password }) {
     const response = await fetch(`/${process.env.NEXT_PUBLIC_API_REGISTER_PATH}`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json', 
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, email, password }),
     });
@@ -178,11 +178,36 @@ async function verifyEmailToken(token) {
     }
 }
 
+/**
+ * NOVO: Envia a solicitação de redefinição de senha para a API.
+ * @param {string} email - O e-mail do usuário que esqueceu a senha.
+ * @returns {Promise<object>} - A resposta da API.
+ * @throws {Error} - Lança um erro se a requisição falhar.
+ */
+async function forgotPassword(email) {
+    const response = await fetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        throw new Error(data?.message || `Falha ao solicitar a redefinição (Status: ${response.status}).`);
+    }
+
+    return data;
+}
+
 
 export const authService = {
     login,
     register,
     verifyEmailToken,
+    forgotPassword, // <-- Exporta a nova função
     startSession,
     deleteSession,
     getUserSession,
